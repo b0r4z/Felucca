@@ -1,0 +1,62 @@
+# Builds the FM-1 firmware package (felucca.fwsc) and the browser emulator on every push,
+# runs the host tests, and keeps the results as downloadable artifacts (Actions tab > the run > Artifacts).
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python packages
+        run: pip install Pillow fonttools
+
+      - name: Libraries for the JieLi toolchain (clang 4.0.1)
+        run: sudo apt-get update && sudo apt-get install -y libtinfo5 libncurses5 xz-utils || true
+
+      - name: JieLi toolchain
+        run: tools/get_toolchain.sh "$HOME/.jieli"
+
+      - name: JieLi AC79 SDK (three files of it go into the package)
+        run: |
+          git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+            https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Firmware package
+        uses: actions/upload-artifact@v4
+        with:
+          name: felucca-boris-fwsc
+          path: |
+            build/felucca.fwsc
+            build/felucca.bin
+          if-no-files-found: error
+
+      - name: Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Browser emulator
+        run: web/emu/build.sh
+
+      - name: Emulator page
+        uses: actions/upload-artifact@v4
+        with:
+          name: felucca-boris-emulator
+          path: build/emu/
+          if-no-files-found: error
+
+      - name: Host tests
+        run: tests/run_tests.sh
