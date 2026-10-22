@@ -39,6 +39,7 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #endif
 #if FELUCCA_SLICE
 #include "eng_slice.c"
+#include "eng_boris.c"     /* BORIS: Sample by Boris (plays SLICE's sources) */
 #endif
 
 /* the editor protocol, user presets and projects store these indices: append, never reorder */
@@ -62,6 +63,7 @@ static const engine_t *const ENGINES[NENGINES] = {
     &ENG_FM6,                    /* 12 (ENGI_FM6) */
 #if FELUCCA_SLICE
     &ENG_SLICE,                  /* 13 (FELUCCA_SLICE=0 builds without it) */
+    &ENG_BORIS,                  /* 14 (with SLICE) */
 #endif
 };
 
@@ -101,6 +103,11 @@ static const char *snd_missing(const track_t *t, uint32_t *code)
         *code = 64u + si;
         return slc_get(si) ? 0 : N_SLC_SRC[si];
     }
+    if (e == &ENG_BORIS) {
+        si = brs_src_of(t->p);
+        *code = 96u + si;
+        return slc_get(si) ? 0 : N_SLC_SRC[si];
+    }
 #endif
     if (e != &ENG_SAMPLE && e != &ENG_GRAIN)
         return 0;
@@ -121,6 +128,7 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
     11,                          /* NOISE */
 #if FELUCCA_SLICE
     13,                          /* SLICE */
+    14,                          /* BORIS */
 #endif
     10,                          /* DRUM */
 };
@@ -182,6 +190,9 @@ static const struct {
      * now that the arpeggiator is the track's and a preset no longer switches it on */
     {"ARP", {48, 51, 55, 60, 63, 67, 72, 75, 48, 51, 55, 60, 63, 67, 72, 75},       /* 13 */
      {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}},
+    /* BORIS (eng_boris.c): C4 = the sample at its own speed; every step restarts it */
+    {"RETRIG", {60, 0, 60, 60, 0, 60, 0, 67, 60, 0, 60, 0, 55, 0, 60, 72},       /* 14 */
+     {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0}},
 };
 #undef T_
 #define NPATTERNS (sizeof PATTERNS / sizeof PATTERNS[0])
