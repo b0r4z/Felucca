@@ -6,6 +6,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write              # publishes the site (installer, editor, emulator) to the gh-pages branch
+
 jobs:
   firmware:
     runs-on: ubuntu-22.04
@@ -60,3 +63,27 @@ jobs:
 
       - name: Host tests
         run: sh tests/run_tests.sh
+
+      # the site: the web installer with this package in it, the editor and the emulator (GitHub Pages)
+      - name: Release build (identity FM-1_916, version v1.6-boris)
+        run: ./build.sh --release 1.6-boris
+
+      - name: Site
+        run: |
+          python3 web/make_site.py build/felucca-1.6-boris.fwsc 1.6-boris site
+          mkdir -p site/emulator && cp -r build/emu/. site/emulator/
+          touch site/.nojekyll
+
+      - name: Release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: felucca-1.6-boris-release
+          path: build/release-1.6-boris/
+          if-no-files-found: error
+
+      - name: Publish the site (gh-pages)
+        if: github.ref == 'refs/heads/boris-engine'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
