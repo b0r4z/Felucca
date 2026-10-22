@@ -39,6 +39,8 @@ static uint8_t eng_mem_owner[NPART];       /* engine index + 1 whose state is in
 #endif
 #if FELUCCA_SLICE
 #include "eng_slice.c"
+#endif
+#if FELUCCA_BORIS
 #include "eng_boris.c"     /* BORIS: Sample by Boris (plays SLICE's sources) */
 #endif
 
@@ -63,7 +65,9 @@ static const engine_t *const ENGINES[NENGINES] = {
     &ENG_FM6,                    /* 12 (ENGI_FM6) */
 #if FELUCCA_SLICE
     &ENG_SLICE,                  /* 13 (FELUCCA_SLICE=0 builds without it) */
-    &ENG_BORIS,                  /* 14 (with SLICE) */
+#endif
+#if FELUCCA_BORIS
+    &ENG_BORIS,                  /* 14 (with SLICE, without DIGITAL) */
 #endif
 };
 
@@ -103,6 +107,8 @@ static const char *snd_missing(const track_t *t, uint32_t *code)
         *code = 64u + si;
         return slc_get(si) ? 0 : N_SLC_SRC[si];
     }
+#endif
+#if FELUCCA_BORIS
     if (e == &ENG_BORIS) {
         si = brs_src_of(t->p);
         *code = 96u + si;
@@ -128,6 +134,8 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
     11,                          /* NOISE */
 #if FELUCCA_SLICE
     13,                          /* SLICE */
+#endif
+#if FELUCCA_BORIS
     14,                          /* BORIS */
 #endif
     10,                          /* DRUM */

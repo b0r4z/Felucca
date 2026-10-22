@@ -28,7 +28,9 @@
                                             * second core (mod.c, voice.c SPREAD, eng_formant.c): one each with two cores,
                                             * one for all with one, as up to 1.6 */
 #define C1_PI(t) ((uint32_t)((t) - trk) % C1_NP)   /* a part's copy */
-#define NENGINES (13 + 2 * FELUCCA_SLICE)   /* SLICE (13), then BORIS (14, needs SLICE's tables): the others keep their numbers */
+#define FELUCCA_BORIS (FELUCCA_SLICE && !FELUCCA_FM4)   /* BORIS needs SLICE's tables; with DIGITAL the EDIT layer's
+                                                       * white keys are full (ui_layer.c LY_CLEAN) */
+#define NENGINES (13 + FELUCCA_SLICE + FELUCCA_BORIS)   /* SLICE (13), then BORIS (14): the others keep their numbers */
 #define ENGI_DIGITAL 1u          /* reserved without FELUCCA_FM4: never selectable (eng_ok), its sounds load as FM6 */
 #define NENG_SHOWN (NENGINES - !FELUCCA_FM4)   /* the engines one can pick: PRESETS, the EDIT layer, the editor,
                                                 * in the display order of engines.c ENGINE_ORDER */
